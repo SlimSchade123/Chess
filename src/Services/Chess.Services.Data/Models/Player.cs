@@ -46,6 +46,8 @@ public class Player
 
     public int Points { get; set; }
 
+    public string Chess960Fen { get; set; }
+
     public Dictionary<string, int> TakenFigures { get; }
 
     public void TakeFigure(string figureName)
