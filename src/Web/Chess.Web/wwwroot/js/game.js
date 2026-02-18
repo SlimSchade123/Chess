@@ -1,4 +1,52 @@
-﻿$(function () {
+﻿function generateChess960BackRank() {
+    //Generate Chess960 starting position using FEN notation
+
+    //960 Rules: Bishops must be on opposite colored squares, king between the rooks
+    var startingBackRank = "RNBQKBNR";
+    var chess960BackRank = "";
+
+    chess960BackRank = startingBackRank.split('').sort(function () { return 0.5 - Math.random() }).join('');
+    //console.log(chess960BackRank);
+
+    //make sure bishops are on opposite colored squares
+    var bishop1Position = chess960BackRank.indexOf('B');
+    var bishop2Position = chess960BackRank.lastIndexOf('B');
+    var isBishopsOnOppositeColors = (bishop1Position % 2) !== (bishop2Position % 2);
+    //console.log(isBishopsOnOppositeColors);
+
+    //make sure king is between the rooks
+    var kingPosition = chess960BackRank.indexOf('K');
+    var rook1Position = chess960BackRank.indexOf('R');
+    var rook2Position = chess960BackRank.lastIndexOf('R');
+    var isKingBetweenRooks = (kingPosition > rook1Position) && (kingPosition < rook2Position);
+    //console.log(isKingBetweenRooks);
+
+    while (!isBishopsOnOppositeColors || !isKingBetweenRooks) {
+        chess960BackRank = startingBackRank.split('').sort(function () { return 0.5 - Math.random() }).join('');
+        bishop1Position = chess960BackRank.indexOf('B');
+        bishop2Position = chess960BackRank.lastIndexOf('B');
+        isBishopsOnOppositeColors = (bishop1Position % 2) !== (bishop2Position % 2);
+        kingPosition = chess960BackRank.indexOf('K');
+        rook1Position = chess960BackRank.indexOf('R');
+        rook2Position = chess960BackRank.lastIndexOf('R');
+        isKingBetweenRooks = (kingPosition > rook1Position) && (kingPosition < rook2Position);
+    }
+    return chess960BackRank;
+}
+
+function generateChess960FEN() {
+    var whiteBackRank = generateChess960BackRank();
+    var blackBackRank = generateChess960BackRank().toLowerCase();
+
+
+    var middleFENStuffs = "/pppppppp/8/8/8/8/PPPPPPPP/";
+    var finalFEN = blackBackRank + middleFENStuffs + whiteBackRank;
+    console.log(finalFEN);
+    return finalFEN;
+}
+
+
+$(function () {
     var connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
 
     let playerId;
@@ -92,6 +140,7 @@
         elements.whiteRating.innerHTML = game.player1.rating;
         elements.blackRating.innerHTML = game.player2.rating;
         updateStatus(game.movingPlayer.name);
+        board.position(game.player1.chess960Fen);
     })
 
     connection.on("BoardMove", function (source, target) {
@@ -363,10 +412,11 @@
         let id = $(this).parent().attr('class');
         let name = elements.lobbyInputName.value;
         if (name !== "") {
+            console.log(board == null);
             connection.invoke("JoinRoom", name, id)
                 .then((player) => {
                     playerId = player.id;
-                    board.orientation('black');
+                    board ? board.orientation('black') : 'white';
                 })
                 .catch((err) => alert(err));
         }
@@ -391,6 +441,7 @@
                     elements.blackRating.innerHTML = "N/A";
                     elements.statusText.style.color = "red";
                     elements.statusText.innerText = "WAITING FOR OPPONENT...";
+                    board.position(player.chess960Fen);
                 })
                 .catch((err) => alert(err));
         }
@@ -458,6 +509,13 @@
         }
     });
 
+
+
+    var chess960 = true;
+    var chess960FEN = generateChess960FEN();
+    //console.log(chess960FEN);
+    
+
     var config = {
         pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
         draggable: true,
@@ -465,8 +523,9 @@
         showNotation: true,
         onDrop: onDrop,
         moveSpeed: 50,
-        position: 'start'
+        position: 'start',
     }
 
     var board = ChessBoard('board', config);
+    console.log(board)
 })

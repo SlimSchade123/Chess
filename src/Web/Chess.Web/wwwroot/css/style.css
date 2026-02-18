@@ -1,5 +1,5 @@
 ﻿@import url("../lib/bootstrap/dist/css/bootstrap.css");
-@import url("../lib/chessboard-js/chessboard-1.0.0.css");
+@import url("../lib/chessboard-js/dist/chessboard-1.0.0.css");
 @import url("home.css");
 @import url("game.css");
 @import url("about.css");
