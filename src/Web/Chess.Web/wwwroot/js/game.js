@@ -363,10 +363,11 @@
         let id = $(this).parent().attr('class');
         let name = elements.lobbyInputName.value;
         if (name !== "") {
+            console.log(board == null);
             connection.invoke("JoinRoom", name, id)
                 .then((player) => {
                     playerId = player.id;
-                    board.orientation('black');
+                    board ? board.orientation('black') : 'white';
                 })
                 .catch((err) => alert(err));
         }
@@ -469,4 +470,5 @@
     }
 
     var board = ChessBoard('board', config);
+    console.log(board)
 })
