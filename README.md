@@ -1,4 +1,6 @@
-# Multiplayer Chess
+# Multiplayer Chess960
+
+Forked Version that uses Chess960: ![Rules](https://en.wikipedia.org/wiki/Chess960)
 
 **ASP.NET Core** board game with **SignalR** and **chessboardjs**.
 
