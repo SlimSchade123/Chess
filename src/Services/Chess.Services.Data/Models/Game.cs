@@ -38,7 +38,7 @@ public class Game
         this.Player1.GameId = this.Id;
         this.Player2.GameId = this.Id;
 
-        this.ChessBoard.ArrangePieces();
+        this.ChessBoard.ArrangePieces(this.Player1.Chess960Fen == "start" ? null : this.Player1.Chess960Fen);
     }
 
     public string Id { get; } = Guid.NewGuid().ToString();

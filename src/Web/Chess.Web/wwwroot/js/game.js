@@ -1,52 +1,4 @@
-﻿function generateChess960BackRank() {
-    //Generate Chess960 starting position using FEN notation
-
-    //960 Rules: Bishops must be on opposite colored squares, king between the rooks
-    var startingBackRank = "RNBQKBNR";
-    var chess960BackRank = "";
-
-    chess960BackRank = startingBackRank.split('').sort(function () { return 0.5 - Math.random() }).join('');
-    //console.log(chess960BackRank);
-
-    //make sure bishops are on opposite colored squares
-    var bishop1Position = chess960BackRank.indexOf('B');
-    var bishop2Position = chess960BackRank.lastIndexOf('B');
-    var isBishopsOnOppositeColors = (bishop1Position % 2) !== (bishop2Position % 2);
-    //console.log(isBishopsOnOppositeColors);
-
-    //make sure king is between the rooks
-    var kingPosition = chess960BackRank.indexOf('K');
-    var rook1Position = chess960BackRank.indexOf('R');
-    var rook2Position = chess960BackRank.lastIndexOf('R');
-    var isKingBetweenRooks = (kingPosition > rook1Position) && (kingPosition < rook2Position);
-    //console.log(isKingBetweenRooks);
-
-    while (!isBishopsOnOppositeColors || !isKingBetweenRooks) {
-        chess960BackRank = startingBackRank.split('').sort(function () { return 0.5 - Math.random() }).join('');
-        bishop1Position = chess960BackRank.indexOf('B');
-        bishop2Position = chess960BackRank.lastIndexOf('B');
-        isBishopsOnOppositeColors = (bishop1Position % 2) !== (bishop2Position % 2);
-        kingPosition = chess960BackRank.indexOf('K');
-        rook1Position = chess960BackRank.indexOf('R');
-        rook2Position = chess960BackRank.lastIndexOf('R');
-        isKingBetweenRooks = (kingPosition > rook1Position) && (kingPosition < rook2Position);
-    }
-    return chess960BackRank;
-}
-
-function generateChess960FEN() {
-    var whiteBackRank = generateChess960BackRank();
-    var blackBackRank = generateChess960BackRank().toLowerCase();
-
-
-    var middleFENStuffs = "/pppppppp/8/8/8/8/PPPPPPPP/";
-    var finalFEN = blackBackRank + middleFENStuffs + whiteBackRank;
-    console.log(finalFEN);
-    return finalFEN;
-}
-
-
-$(function () {
+﻿$(function () {
     var connection = new signalR.HubConnectionBuilder().withUrl("/hub").build();
 
     let playerId;
@@ -89,7 +41,24 @@ $(function () {
         resignBtn: document.querySelector('.resign-btn'),
         offerDrawBtn: document.querySelector('.offer-draw-btn'),
         threefoldDrawBtn: document.querySelector('.threefold-draw-btn'),
+        regularBtn: document.querySelector('.game-lobby-input-regular-btn'),
+        chess960Btn: document.querySelector('.game-lobby-input-chess960-btn'),
     }
+
+
+    let chess960Selected = false;
+
+    elements.chess960Btn.addEventListener("click", function () {
+        chess960Selected = true;
+        elements.chess960Btn.classList.add('active');
+        elements.regularBtn.classList.remove('active');
+    });
+
+    elements.regularBtn.addEventListener("click", function () {
+        chess960Selected = false;
+        elements.regularBtn.classList.add('active');
+        elements.chess960Btn.classList.remove('active');
+    });
 
     connection.on("AddRoom", function (player) {
         let div = document.createElement('div');
@@ -140,7 +109,10 @@ $(function () {
         elements.whiteRating.innerHTML = game.player1.rating;
         elements.blackRating.innerHTML = game.player2.rating;
         updateStatus(game.movingPlayer.name);
+
         board.position(game.player1.chess960Fen);
+        
+        
     })
 
     connection.on("BoardMove", function (source, target) {
@@ -416,7 +388,7 @@ $(function () {
             connection.invoke("JoinRoom", name, id)
                 .then((player) => {
                     playerId = player.id;
-                    board ? board.orientation('black') : 'white';
+                    board.orientation('black');
                 })
                 .catch((err) => alert(err));
         }
@@ -428,7 +400,7 @@ $(function () {
     elements.lobbyInputCreateBtn.addEventListener("click", function () {
         let name = elements.lobbyInputName.value;
         if (name !== "") {
-            connection.invoke("CreateRoom", name)
+            connection.invoke("CreateRoom", name, chess960Selected)
                 .then((player) => {
                     playerId = player.id;
                     document.querySelector('.game-lobby').style.display = "none";
@@ -442,6 +414,7 @@ $(function () {
                     elements.statusText.style.color = "red";
                     elements.statusText.innerText = "WAITING FOR OPPONENT...";
                     board.position(player.chess960Fen);
+                    
                 })
                 .catch((err) => alert(err));
         }
@@ -508,12 +481,6 @@ $(function () {
             elements.gameChatSendBtn.click();
         }
     });
-
-
-
-    var chess960 = true;
-    var chess960FEN = generateChess960FEN();
-    //console.log(chess960FEN);
     
 
     var config = {

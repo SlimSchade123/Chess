@@ -1,53 +1,25 @@
 ﻿namespace Chess.Web.Hubs;
 
 using Chess.Common.Enums;
+using Chess.Common.Generators;
 using Chess.Data.Common.Repositories;
 using Chess.Data.Models;
 using Chess.Services.Data.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 public partial class GameHub
 {
 
-    private string GenerateChess960FEN()
-    {
-        string pieces = "RNBQKBNR";
-        string backRank;
-        Random rng = new ();
+   
 
-        do
-        {
-            backRank = new string(pieces.OrderBy(x => rng.Next()).ToArray());
-
-            int bishop1 = backRank.IndexOf('B');
-            int bishop2 = backRank.LastIndexOf('B');
-            int king = backRank.IndexOf('K');
-            int rook1 = backRank.IndexOf('R');
-            int rook2 = backRank.LastIndexOf('R');
-
-            bool bishopsOk = (bishop1 % 2) != (bishop2 % 2);
-            bool kingOk = king > rook1 && king < rook2;
-
-            if (bishopsOk && kingOk)
-            {
-                break;
-            }
-        }
-        while (true);
-
-        return backRank.ToLower() + "/pppppppp/8/8/8/8/PPPPPPPP/" + backRank;
-    }
-
-    public async Task<Player> CreateRoom(string name)
+    public async Task<Player> CreateRoom(string name, bool isChess960)
     {
         Player player = Factory.GetPlayer(name, this.Context.ConnectionId, this.Context.UserIdentifier);
         player.Rating = this.GetUserRating(player);
         this.players[player.Id] = player;
-        player.Chess960Fen = this.GenerateChess960FEN();
+        player.Chess960Fen = isChess960 ? Chess960Generator.GenerateChess960FEN() : "start";
         await this.LobbySendInternalMessage(player.Name);
         await this.Clients.All.SendAsync("AddRoom", player);
 
@@ -61,7 +33,6 @@ public partial class GameHub
         player2.Rating = this.GetUserRating(player2);
         this.players[player2.Id] = player2;
         var player1 = this.players[id];
-
         await this.StartGame(player1, player2);
         return player2;
     }
