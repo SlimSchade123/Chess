@@ -45,9 +45,50 @@ public class Board : ICloneable
         return AttackType.Diagonal;
     }
 
-    public void ArrangePieces()
+    private static void ParseBackRank(string rank, int rankIndex, Color color, Dictionary<string, IPiece> setup)
     {
-        var setup = GetStandardSetup();
+        for (int file = BoardConstants.FileA; file <= BoardConstants.FileH; file++)
+        {
+            char pieceChar = rank[file];
+            IPiece piece = char.ToUpper(pieceChar) switch
+            {
+                'R' => Factory.GetRook(color),
+                'N' => Factory.GetKnight(color),
+                'B' => Factory.GetBishop(color),
+                'Q' => Factory.GetQueen(color),
+                'K' => Factory.GetKing(color),
+                _ => null,
+            };
+            if (piece != null)
+            {
+                setup[$"{file},{rankIndex}"] = piece;
+            }
+        }
+    }
+
+
+    public Dictionary<string, IPiece> GetChess960Setup(string fen)
+    {
+        var setup = new Dictionary<string, IPiece>();
+        var ranks = fen.Split('/');
+
+        // back ranks are index 0 (black, rank 8) and index 7 (white, rank 1)
+        ParseBackRank(ranks[0], BoardConstants.Rank8, Color.Black, setup);
+        ParseBackRank(ranks[7], BoardConstants.Rank1, Color.White, setup);
+
+        // pawns are always the same
+        for (int file = BoardConstants.FileA; file <= BoardConstants.FileH; file++)
+        {
+            setup[$"{file},{BoardConstants.Rank2}"] = Factory.GetPawn(Color.White);
+            setup[$"{file},{BoardConstants.Rank7}"] = Factory.GetPawn(Color.Black);
+        }
+
+        return setup;
+    }
+
+    public void ArrangePieces(string fen = null)
+    {
+        var setup = fen == null ? GetStandardSetup() : GetChess960Setup(fen);
 
         foreach (var square in this.Matrix.SelectMany(x => x))
         {
