@@ -4,7 +4,7 @@ Forked Version that uses Chess960: ![Rules](https://en.wikipedia.org/wiki/Chess9
 
 **ASP.NET Core** board game with **SignalR** and **chessboardjs**.
 
-![game](src/Web/Chess.Web/wwwroot/img/ezgif.com-gif-maker.gif)
+[game](src/Web/Chess.Web/wwwroot/img/ezgif.com-gif-maker.gif)
 
 ## Build Status
 
